@@ -26,6 +26,7 @@ export default function EmailBuilder() {
                                 ${phrase.text}
                             </h3>
                             <em>- ${phrase.author}</em>
+                            <br/>
                             <br/>`
                             : ''
                     }

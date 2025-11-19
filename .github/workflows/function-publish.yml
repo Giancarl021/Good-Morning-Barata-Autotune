@@ -19,7 +19,7 @@ jobs:
             - name: 'Checkout GitHub Action'
               uses: actions/checkout@v4
 
-            - name: Setup Node nvironment
+            - name: Setup Node Environment
               uses: actions/setup-node@v3
               with:
                   node-version: 24
@@ -27,7 +27,7 @@ jobs:
             - name: 'Resolve Project Dependencies Using PNPM'
               shell: bash
               run: |
-                  corepack install --global pnpm
+                  corepack install --global pnpm@latest
                   corepack enable pnpm
                   pnpm install
                   pnpm build

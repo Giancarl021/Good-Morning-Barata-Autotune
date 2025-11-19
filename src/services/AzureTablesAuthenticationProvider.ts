@@ -1,51 +1,22 @@
-import { DefaultAzureCredential } from '@azure/identity';
-import { TableClient } from '@azure/data-tables';
 import constants from '../util/constants';
 import type {
     AccessTokenResponse,
     Credentials
 } from 'graph-interface/lib/src/interfaces';
+import type { AzureTablesInstance } from './AzureTables';
+import type TokenEntity from '../interfaces/TokenEntity';
 
-const credential = new DefaultAzureCredential();
-
-interface TokenEntity {
-    value: string;
-    expiresAt: string;
-}
-
-export default function AzureTablesAuthenticationProvider() {
-    const tableClient = new TableClient(
-        `https://${constants.authentication.storageAccountName}.table.core.windows.net`,
-        constants.authentication.tableName,
-        credential
-    );
-
-    function isTokenExpired(token: TokenEntity): boolean {
-        const expiresAt = new Date(token.expiresAt);
-        const now = new Date();
-        return now >= expiresAt;
-    }
-
-    function getRelativeExpiration(expiresAt: string): number {
+export default function AzureTablesAuthenticationProvider(
+    azureTables: AzureTablesInstance
+) {
+    function _getRelativeExpiration(expiresAt: string): number {
         const expiresDate = new Date(expiresAt);
         const now = new Date();
         return Math.floor((expiresDate.getTime() - now.getTime()) / 1000);
     }
 
-    async function getTokenEntity(
-        type: 'AccessToken' | 'RefreshToken'
-    ): Promise<TokenEntity | undefined> {
-        const entity: TokenEntity = await tableClient
-            .getEntity('Tokens', type)
-            .catch(() => undefined);
-
-        if (entity && !isTokenExpired(entity)) {
-            return entity;
-        }
-    }
-
-    function toTokenResponse(entity: TokenEntity): AccessTokenResponse {
-        const relativeExpiration = getRelativeExpiration(entity.expiresAt);
+    function _tokenResponse(entity: TokenEntity): AccessTokenResponse {
+        const relativeExpiration = _getRelativeExpiration(entity.expiresAt);
 
         return {
             tokenType: 'Bearer',
@@ -58,21 +29,19 @@ export default function AzureTablesAuthenticationProvider() {
     async function getToken(
         credentials: Credentials
     ): Promise<AccessTokenResponse> {
-        await tableClient.createTable().catch(() => {});
-
-        const accessTokenEntity = await getTokenEntity('AccessToken');
+        const accessTokenEntity = await azureTables.getToken('AccessToken');
 
         if (accessTokenEntity) {
-            return toTokenResponse(accessTokenEntity);
+            return _tokenResponse(accessTokenEntity);
         }
 
-        const refreshToken = await getTokenEntity('RefreshToken');
+        const refreshToken = await azureTables.getToken('RefreshToken');
 
         if (!refreshToken) {
             throw new Error('No valid access token or refresh token found.');
         }
 
-        await fetch(
+        const response = await fetch(
             `https://login.microsoftonline.com/${credentials.tenantId}/oauth2/v2.0/token`,
             {
                 method: 'POST',
@@ -83,14 +52,40 @@ export default function AzureTablesAuthenticationProvider() {
                     client_id: credentials.clientId,
                     client_secret: credentials.clientSecret,
                     refresh_token: refreshToken.value,
-                    redirect_uri: `http://localhost:${''}`,
+                    redirect_uri: constants.authentication.callbackUrl,
                     grant_type: 'refresh_token',
-                    scope: 'https://graph.microsoft.com/.default offline_access'
-                })
+                    scope: constants.authentication.scopes.join(' ')
+                }).toString()
             }
         );
 
-        return {} as any;
+        if (!response.ok) {
+            throw new Error(
+                `Failed to refresh access token: ${response.status} ${response.statusText}`
+            );
+        }
+
+        const tokenResponse: Record<string, string> = await response.json();
+
+        const newAccessToken: TokenEntity = {
+            rowKey: 'AccessToken',
+            value: tokenResponse['access_token'],
+            expiresAt: new Date(
+                Date.now() + Number(tokenResponse['expires_in']) * 1000
+            ).toISOString()
+        };
+
+        await azureTables.setToken(newAccessToken);
+
+        await azureTables.setToken({
+            rowKey: 'RefreshToken',
+            value: tokenResponse['refresh_token'],
+            expiresAt: new Date(
+                Date.now() + 48 * 60 * 60 * 1000 // 48 hours
+            ).toISOString()
+        });
+
+        return _tokenResponse(newAccessToken);
     }
 
     return getToken;

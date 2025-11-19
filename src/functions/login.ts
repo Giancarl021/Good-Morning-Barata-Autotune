@@ -1,23 +1,32 @@
 import {
     app,
-    HttpRequest,
-    HttpResponseInit,
-    InvocationContext
+    type HttpRequest,
+    type HttpResponseInit,
+    type InvocationContext
 } from '@azure/functions';
+import OAuth from '../services/OAuth';
+import AzureTables from '../services/AzureTables';
 
 export async function login(
-    request: HttpRequest,
+    _request: HttpRequest,
     context: InvocationContext
 ): Promise<HttpResponseInit> {
-    context.log(`Http function processed request for url "${request.url}"`);
+    context.log('Processing login request');
 
-    const name = request.query.get('name') || (await request.text()) || 'world';
+    const azureTables = AzureTables();
+    const state = await azureTables.setState();
+    const oAuth = OAuth(state);
 
-    return { body: `Hello, ${name}!` };
+    return {
+        status: 302,
+        headers: {
+            Location: oAuth.getCodeUri()
+        }
+    };
 }
 
 app.http('login', {
-    methods: ['GET', 'POST'],
-    authLevel: 'anonymous',
+    methods: ['GET'],
+    authLevel: 'function',
     handler: login
 });

@@ -22,19 +22,13 @@ export default function EmailBuilder() {
                     ${
                         constants.sendRandomPhrase
                             ? `
-                            <h2>
+                            <h3>
                                 ${phrase.text}
-                            </h2>
-                            <br/>
-                            <h3 style="margin-left: auto">
-                                - ${phrase.author}
                             </h3>
-                            <br/>
+                            <em>- ${phrase.author}</em>
                             <br/>`
                             : ''
                     }
-                    <b>Um bom dia!</b>
-                    <br/>
                     <img src="${gifUrl}" alt="Daily GIF" />
                 </body>
             </html>

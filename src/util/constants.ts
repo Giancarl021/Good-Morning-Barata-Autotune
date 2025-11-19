@@ -6,19 +6,25 @@ export default {
     sendRandomPhrase: (process.env.SEND_RANDOM_PHRASE || 'true') === 'true',
     email: {
         subject: process.env.EMAIL_SUBJECT || 'Tenha um excelentíssimo dia!',
-        from: process.env.EMAIL_FROM || '',
         to: String(process.env.EMAIL_TO || '')
             .split(',')
             .map(email => email.trim())
     },
     authentication: {
         storageAccountName: process.env.STORAGE_ACCOUNT_NAME || '',
+        storageAccountServicePrincipalAuthentication:
+            process.env.STORAGE_ACCOUNT_SP_AUTH === 'true',
         tableName: process.env.TABLE_NAME || 'EmailAuthentication',
+        callbackUrl:
+            (String(process.env.WEBSITE_HOSTNAME).includes('localhost')
+                ? 'http'
+                : 'https') + `://${process.env.WEBSITE_HOSTNAME}/api/callback`,
         credentials: {
             clientId: process.env.CLIENT_ID || '',
             clientSecret: process.env.CLIENT_SECRET || '',
             tenantId: process.env.TENANT_ID || ''
-        } as Credentials
+        } as Credentials,
+        scopes: ['https://graph.microsoft.com/.default', 'offline_access']
     },
     phrases,
     gifs: {

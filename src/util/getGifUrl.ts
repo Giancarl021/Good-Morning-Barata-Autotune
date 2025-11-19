@@ -1,19 +1,16 @@
-import { randomBytes } from 'crypto';
 import constants from './constants';
+import randomItem, { randomValue } from './random';
 
 export default function getGifUrl(): string {
     const { alternativeProbability, sources } = constants.gifs;
 
-    const useAlternative = randomBytes(1).at(0) / 255 < alternativeProbability;
+    const useAlternative = randomValue(0, 100) / 100 < alternativeProbability;
 
     if (!useAlternative) {
         return sources.default;
     }
 
-    const alternatives = sources.alternatives;
-    const randomIndex =
-        ((randomBytes(1).at(0) / 255) * alternatives.length) %
-        alternatives.length;
+    const alternatives = sources.alternatives as unknown as string[];
 
-    return alternatives[randomIndex];
+    return randomItem(alternatives);
 }

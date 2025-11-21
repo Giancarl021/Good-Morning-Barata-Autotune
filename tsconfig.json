@@ -3,6 +3,7 @@
         "module": "nodenext",
         "moduleResolution": "nodenext",
         "target": "es6",
+        "lib": ["ESNext", "ESNext.AsyncIterable", "ESNext.Disposable"],
         "outDir": "dist",
         "rootDir": ".",
         "sourceMap": true,

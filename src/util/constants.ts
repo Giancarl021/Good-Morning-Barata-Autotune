@@ -2,6 +2,7 @@ import phrases from './phrases.json';
 import type { Credentials } from 'graph-interface/lib/src/interfaces';
 
 export default {
+    phrases,
     schedule: process.env.SCHEDULE || '0 0 8 * * *',
     sendRandomPhrase: (process.env.SEND_RANDOM_PHRASE || 'true') === 'true',
     email: {
@@ -26,7 +27,6 @@ export default {
         } as Credentials,
         scopes: ['https://graph.microsoft.com/.default', 'offline_access']
     },
-    phrases,
     gifs: {
         alternativeProbability:
             Number(process.env.ALTERNATIVE_GIF_PROBABILITY) || 1 / 10,

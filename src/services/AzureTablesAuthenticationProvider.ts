@@ -65,7 +65,7 @@ export default function AzureTablesAuthenticationProvider(
             );
         }
 
-        const tokenResponse: Record<string, string> = await response.json();
+        const tokenResponse = (await response.json()) as Record<string, string>;
 
         const newAccessToken: TokenEntity = {
             rowKey: 'AccessToken',

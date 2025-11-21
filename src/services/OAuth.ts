@@ -45,7 +45,7 @@ export default function OAuth(state: string) {
             );
         }
 
-        const data: Record<string, string> = await response.json();
+        const data = (await response.json()) as Record<string, string>;
 
         return data;
     }

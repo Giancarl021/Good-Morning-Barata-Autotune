@@ -24,13 +24,13 @@ jobs:
               with:
                   node-version: 24
 
-            - name: 'Resolve Project Dependencies Using PNPM'
+            - name: 'Resolve Project Dependencies Using NPM'
               shell: bash
-              run: |
-                  corepack install --global pnpm@latest
-                  corepack enable pnpm
-                  pnpm install
-                  pnpm build
+              run: npm install
+
+            - name: 'Build Project'
+              shell: bash
+              run: npm run build
 
             - name: Zip artifact for deployment
               run: zip release.zip ./* -r

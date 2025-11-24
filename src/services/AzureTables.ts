@@ -8,6 +8,7 @@ import {
 import type TokenEntity from '../interfaces/TokenEntity';
 import { AccessTokenResponse } from 'graph-interface/lib/src/interfaces';
 import { randomUUID } from 'crypto';
+import { days, seconds } from '../util/time';
 
 export type AzureTablesInstance = ReturnType<typeof AzureTables>;
 
@@ -101,16 +102,14 @@ export default function AzureTables() {
             rowKey: 'AccessToken',
             value: tokenResponse['access_token'],
             expiresAt: new Date(
-                Date.now() + Number(tokenResponse['expires_in']) * 1000
+                Date.now() + seconds(Number(tokenResponse['expires_in']))
             ).toISOString()
         });
 
         await setToken({
             rowKey: 'RefreshToken',
             value: tokenResponse['refresh_token'],
-            expiresAt: new Date(
-                Date.now() + 48 * 60 * 60 * 1000 // 48 hours
-            ).toISOString()
+            expiresAt: new Date(Date.now() + days(7)).toISOString()
         });
     }
 

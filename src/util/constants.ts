@@ -4,6 +4,7 @@ import type { Credentials } from 'graph-interface/lib/src/interfaces';
 export default {
     phrases,
     schedule: process.env.SCHEDULE || '0 0 8 * * *',
+    refreshTokenSchedule: process.env.REFRESH_TOKEN_SCHEDULE || '0 0 */3 * * *',
     sendRandomPhrase: (process.env.SEND_RANDOM_PHRASE || 'true') === 'true',
     email: {
         subject: process.env.EMAIL_SUBJECT || 'Tenha um excelentíssimo dia!',

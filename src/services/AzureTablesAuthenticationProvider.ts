@@ -26,15 +26,9 @@ export default function AzureTablesAuthenticationProvider(
         };
     }
 
-    async function getToken(
+    async function refreshToken(
         credentials: Credentials
     ): Promise<AccessTokenResponse> {
-        const accessTokenEntity = await azureTables.getToken('AccessToken');
-
-        if (accessTokenEntity) {
-            return _tokenResponse(accessTokenEntity);
-        }
-
         const refreshToken = await azureTables.getToken('RefreshToken');
 
         if (!refreshToken) {
@@ -87,6 +81,21 @@ export default function AzureTablesAuthenticationProvider(
 
         return _tokenResponse(newAccessToken);
     }
+
+    async function getToken(
+        credentials: Credentials
+    ): Promise<AccessTokenResponse> {
+        const accessTokenEntity = await azureTables.getToken('AccessToken');
+
+        if (accessTokenEntity) {
+            return _tokenResponse(accessTokenEntity);
+        }
+
+        const refreshedToken = await refreshToken(credentials);
+        return refreshedToken;
+    }
+
+    getToken.refreshToken = refreshToken;
 
     return getToken;
 }

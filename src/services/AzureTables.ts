@@ -109,7 +109,7 @@ export default function AzureTables() {
         await setToken({
             rowKey: 'RefreshToken',
             value: tokenResponse['refresh_token'],
-            expiresAt: new Date(Date.now() + days(7)).toISOString()
+            expiresAt: new Date(Date.now() + days(1)).toISOString()
         });
     }
 
